@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Safety Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 450px;
+      width: 100%;
+    }
+    h2 { text-align: center; color: #333; }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #007BFF;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .safe { background: #d4edda; color: #155724; }
+    .danger { background: #f8d7da; color: #721c24; }
+    .warn { background: #fff3cd; color: #856404; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔗 URL Safety Checker</h2>
+    <input type="text" id="urlInput" placeholder="Enter a URL to check...">
+    <button onclick="checkURL()">Check URL</button>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    function checkURL() {
+      const url = document.getElementById("urlInput").value.trim();
+      const resultBox = document.getElementById("result");
+
+      if (!url) {
+        resultBox.textContent = "Please enter a URL.";
+        resultBox.className = "result danger";
+        return;
+      }
+
+      let suspicious = false;
+      let warnings = [];
+
+      // Rule 1: Check for dangerous characters or IP addresses
+      const patterns = [/(@)/, /(--)/, /https?:\/\/\d+\.\d+\.\d+\.\d+/];
+      patterns.forEach(p => { if (p.test(url)) suspicious = true; });
+
+      // Rule 2: Check for URL shorteners
+      if (/(bit\.ly|tinyurl|goo\.gl|shorte|t\.co)/.test(url)) {
+        suspicious = true;
+        warnings.push("Uses a URL shortener");
+      }
+
+      // Rule 3: Check length of URL
+      if (url.length > 75) {
+        suspicious = true;
+        warnings.push("Unusually long URL");
+      }
+
+      // Rule 4: Check suspicious keywords
+      if (/(login|verify|secure|update|bank|paypal|account)/i.test(url)) {
+        suspicious = true;
+        warnings.push("Contains phishing keywords");
+      }
+
+      // Rule 5: Check subdomains
+      const domainParts = url.replace("http://","").replace("https://","").split(".");
+      if (domainParts.length > 3) {
+        suspicious = true;
+        warnings.push("Too many subdomains");
+      }
+
+      // Rule 6: Must be https
+      if (!url.startsWith("https://")) {
+        warnings.push("Not using HTTPS");
+      }
+
+      // Show result
+      if (suspicious) {
+        resultBox.textContent = "⚠ Suspicious URL detected. " + warnings.join(", ");
+        resultBox.className = "result danger";
+      } else if (warnings.length > 0) {
+        resultBox.textContent = "⚠ This URL looks okay but has warnings: " + warnings.join(", ");
+        resultBox.className = "result warn";
+      } else {
+        resultBox.textContent = "✅ This URL looks safe.";
+        resultBox.className = "result safe";
+      }
+    }
+  </script>
+</body>
+</html>
